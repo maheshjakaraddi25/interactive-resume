@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+}
+
+@layer components {
+  /* Resume panel scrollbar */
+  .resume-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+  }
+
+  /* Blinking cursor for streaming text */
+  .streaming-cursor::after {
+    content: '▋';
+    animation: blink 1s step-end infinite;
+    color: #3b82f6;
+    font-weight: 400;
+  }
+
+  /* Smooth message appearance */
+  .message-enter {
+    animation: slideUp 0.25s ease-out;
+  }
+
+  /* Highlight on hover for resume items */
+  .resume-item {
+    @apply transition-all duration-200;
+  }
+
+  .resume-item:hover .ask-chip {
+    @apply opacity-100 translate-y-0;
+  }
+
+  .ask-chip {
+    @apply opacity-0 translate-y-1 transition-all duration-200;
+  }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

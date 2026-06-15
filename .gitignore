@@ -1,6 +1,5 @@
 node_modules/
 dist/
 .env
-knowledge-base/embeddings.json
 .DS_Store
 *.log

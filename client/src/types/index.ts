@@ -1,4 +1,4 @@
-export type AIModel = 'claude' | 'gpt4o';
+export type AIModel = 'claude' | 'gpt4o' | 'gpt2';
 
 export type InterviewMode = 'hr' | 'technical' | 'sysdesign';
 

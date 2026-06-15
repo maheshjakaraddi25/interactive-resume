@@ -1,7 +1,12 @@
 import { Router, type Request, type Response } from 'express';
-import { search as ragSearch } from '../services/ragService';
-import { streamClaude }         from '../services/claudeService';
-import { streamOpenAI }         from '../services/openaiService';
+import { search as ragSearch }                 from '../services/ragService';
+import { streamClaude }                        from '../services/claudeService';
+import { streamOpenAI }                        from '../services/openaiService';
+import {
+  retrieveContext,
+  generateFineTuned,
+  isMlServiceHealthy,
+} from '../services/mlService';
 
 export const chatRouter = Router();
 
@@ -54,7 +59,7 @@ function isDemoMode(): boolean {
          !process.env.OPENAI_API_KEY?.startsWith('sk-');
 }
 
-type AIModel     = 'claude' | 'gpt4o';
+type AIModel       = 'claude' | 'gpt4o' | 'gpt2';
 type InterviewMode = 'hr' | 'technical' | 'sysdesign';
 
 interface ChatBody {
@@ -105,8 +110,8 @@ chatRouter.post('/', async (req: Request<{}, {}, ChatBody>, res: Response) => {
   }
 
   // Validate model
-  if (!['claude', 'gpt4o'].includes(model)) {
-    return res.status(400).json({ error: 'Invalid model. Use "claude" or "gpt4o".' });
+  if (!['claude', 'gpt4o', 'gpt2'].includes(model)) {
+    return res.status(400).json({ error: 'Invalid model. Use "claude", "gpt4o", or "gpt2".' });
   }
 
   // Set SSE headers for streaming
@@ -130,8 +135,30 @@ chatRouter.post('/', async (req: Request<{}, {}, ChatBody>, res: Response) => {
     }
 
     // ── Real mode ───────────────────────────────────────────────────────────
-    // 1. Retrieve relevant context from knowledge base
-    const context = await ragSearch(message);
+
+    // ── GPT-2 (fine-tuned LoRA) — no streaming, direct response ────────────
+    if (model === 'gpt2') {
+      const mlHealthy = await isMlServiceHealthy();
+      if (!mlHealthy) {
+        res.write(`data: ${JSON.stringify({ text: '[ML service offline] Start the Python FastAPI service: cd ml-service && uvicorn main:app --reload --port 8000' })}\n\n`);
+        res.write('data: [DONE]\n\n');
+        return;
+      }
+
+      const result = await generateFineTuned(message);
+      sendToken(result.response);
+      res.write('data: [DONE]\n\n');
+      return;
+    }
+
+    // 1. Retrieve context — use ML service if available, fall back to legacy RAG
+    let context: string;
+    const mlHealthy = await isMlServiceHealthy();
+    if (mlHealthy) {
+      context = await retrieveContext(message);
+    } else {
+      context = await ragSearch(message);
+    }
 
     // 2. Build the system prompt
     const systemPrompt = buildSystemPrompt(context, mode);

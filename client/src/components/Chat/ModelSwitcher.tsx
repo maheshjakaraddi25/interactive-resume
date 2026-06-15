@@ -19,6 +19,12 @@ const MODELS: { id: AIModel; label: string; badge: string; color: string }[] = [
     badge: 'OpenAI',
     color: 'from-emerald-500 to-teal-400',
   },
+  {
+    id: 'gpt2',
+    label: 'GPT-2',
+    badge: 'Fine-tuned',
+    color: 'from-violet-500 to-purple-400',
+  },
 ];
 
 export function ModelSwitcher({ model, onChange, disabled }: Props) {
